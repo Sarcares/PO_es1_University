@@ -1,33 +1,37 @@
 package ateneo;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class Ateneo {
+	
+	private static final int MAX_STUDENTS = 1000;
+	private static final int MAX_COURSES = 5;
 
 	private String universityName;
 	private String rectorName;
 	private String rectorSurname;
 	
-	private int nextID;		//the ID numbers must start from 10000
+	private int studentID = 9999;	//the student ID must start from 10000
 	private Map<Integer, Studente> studenti;
+	
+	private int courseID = 9;		//the subject ID must start from 10
+	private Map<Integer, Corso> corsi;
 
 /* -.-.-.-.-.- Constructor Methods -.-.-.-.-.- */
 	public Ateneo(String universityName) {
 		this.universityName = universityName;
-		
-		this.nextID = 9999;
 		this.studenti = new HashMap<Integer, Studente>();
+		this.corsi = new HashMap<Integer, Corso>();
 	}
+	
 	public Ateneo(String universityName, String rectorName, String rectorSurname) {
 		this.universityName = universityName;
 		this.rectorName = rectorName;
 		this.rectorSurname = rectorSurname;
-		
-		this.nextID = 9999;
 		this.studenti = new HashMap<Integer, Studente>();
+		this.corsi = new HashMap<Integer, Corso>();
 	}
 
 /* -.-.-.-.-.- Getter and Setter Methods -.-.-.-.-.- */
@@ -45,43 +49,80 @@ public class Ateneo {
 	}
 
 /* -.-.-.-.-.- Logic Methods -.-.-.-.-.- */
+	/** This method enrolls a new student.
+	 * @return - If the method fails return -1 otherwise it returns the Student ID of the new enrolled student. 
+	 */
 	public int immatricola(String studentName, String studentSurname) {
-		if(studenti.size() > 1000)
+		if(studenti.size() >= MAX_STUDENTS)
 			return -1;
 
-		nextID++;
-		Studente s = new Studente(nextID, studentName, studentSurname);
-		studenti.put(nextID, s);
-		return nextID;
+		studentID++;
+		Studente s = new Studente(studentID, studentName, studentSurname);
+		studenti.put(studentID, s);
+		return studentID;
 	}
 
 	public String studente(int studentID) {
 		return studenti.get(studentID).toString();
 	}
 
-	public int attiva(String string, String string2) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-	
-	public String insegnamento(int codice){
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public void iscrivi(int s1, int macro) {
-		// TODO Auto-generated method stub
+	/** This method activates a new course.
+	 * @return - If the method fails return -1 otherwise it returns the Course ID of the new course. 
+	 */
+	public int attiva(String subject, String teacher) {
+		if( corsi.size() >= MAX_COURSES )
+			return -1;
 		
-	}
-
-	public char[] elencoIscritti(int macro) {
-		// TODO Auto-generated method stub
-		return null;
+		courseID++;
+		Corso c = new Corso(courseID, subject, teacher);
+		corsi.put(courseID, c);
+		return courseID;
 	}
 	
-	public String pianoStudi(int matricolaStudente){
-		// TODO Auto-generated method stub
-		return null;
+	public String insegnamento(int courseID){
+		return corsi.get(courseID).toString();
+	}
+
+	public boolean iscrivi(int studentID, int courseID) {
+		Studente s = studenti.get(studentID);
+		Corso c = corsi.get(courseID);
+		if( s==null || c==null ) {
+			System.err.println("Some data are wrong!");
+			return false;
+		}
+		if( s.addCourse(c) == false ) {
+			System.err.println("No more courses are allowed for this student!");
+			return false;
+		}
+		else if( c.addStudent(s) == false ) {
+			System.err.println("No more students are allowed for this course!");
+			s.removeCourse(courseID);
+			return false;
+		}
+		
+		return true;
+	}
+
+	public String elencoIscritti(int courseID) {	
+		Corso c = corsi.get(courseID);
+		Collection<Studente> subscribed = c.getStudents();
+		String toRet = "";
+		
+		for(Studente s : subscribed)
+			toRet += s.toString()+"\n";
+		
+		return toRet;
+	}
+	
+	public String pianoStudi(int studentID){
+		Studente s = studenti.get(studentID);
+		Collection<Corso> subscribed = s.getCourses();
+		String toRet = "";
+		
+		for(Corso c : subscribed)
+			toRet += c.toString()+"\n";
+		
+		return toRet;
 	}
 	
 	public String toString() {
